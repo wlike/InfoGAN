@@ -4,21 +4,16 @@ Code for reproducing key results in the paper [InfoGAN: Interpretable Representa
 
 ## Dependencies
 
-This project currently requires the dev version of TensorFlow available on Github: https://github.com/tensorflow/tensorflow. As of the release, the latest commit is [79174a](https://github.com/tensorflow/tensorflow/commit/79174afa30046ecdc437b531812f2cb41a32695e).
+This fork of [the original](https://github.com/openai/InfoGAN) changes part of the code to accomodate the new TensorFlow API.  I am using version 1.3.0.  Since this project also used `prettytensor`, which has it's own problems, you'll need to handle that as well. 
 
 In addition, please `pip install` the following packages:
 - `prettytensor`
 - `progressbar`
 - `python-dateutil`
 
-## Running in Docker
+### Modifying PrettyTensor
+You'll likely get an error like `ValueError:  too many values to unpack`.  You can fix this by either pulling the relevant commit from the pull request or merely making [this](https://github.com/google/prettytensor/pull/57/files) trivial change.  
 
-```bash
-$ git clone git@github.com:openai/InfoGAN.git
-$ docker run -v $(pwd)/InfoGAN:/InfoGAN -w /InfoGAN -it -p 8888:8888 gcr.io/tensorflow/tensorflow:r0.9rc0-devel
-root@X:/InfoGAN# pip install -r requirements.txt
-root@X:/InfoGAN# python launchers/run_mnist_exp.py
-```
 
 ## Running Experiment
 
