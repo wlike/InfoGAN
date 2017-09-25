@@ -9,11 +9,37 @@ class conv_batch_norm(pt.VarStoreMethod):
 
     def __call__(self, input_layer, epsilon=1e-5, momentum=0.1, name="batch_norm",
                  in_dim=None, phase=Phase.train):
-        self.ema = tf.train.ExponentialMovingAverage(decay=0.9)
-
+        
         shape = input_layer.shape
         shp = in_dim or shape[-1]
-        with tf.variable_scope(name) as scope:
+        with tf.variable_scope(tf.get_variable_scope(), reuse=False) as scope:
+
+            if phase == Phase.train:
+                train=True
+            else:
+                train=False
+                
+            normalized_x =  tf.contrib.layers.batch_norm(
+                    input_layer,
+                    decay=momentum,
+                    epsilon=epsilon,
+                    scale=True,
+                    is_training=train,
+                    scope=scope
+                    )
+
+            return input_layer.with_tensor(normalized_x, parameters=self.vars)
+
+class conv_batch_norm_old(pt.VarStoreMethod):
+    """Code modification of http://stackoverflow.com/a/33950177"""
+
+    def __call__(self, input_layer, epsilon=1e-5, momentum=0.1, name="batch_norm",
+                 in_dim=None, phase=Phase.train):
+        
+        self.ema = tf.train.ExponentialMovingAverage(decay=0.9)
+        shape = input_layer.shape
+        shp = in_dim or shape[-1]
+        with tf.variable_scope(tf.get_variable_scope(), reuse=False) as scope:
             self.gamma = self.variable("gamma", [shp], init=tf.random_normal_initializer(1., 0.02))
             self.beta = self.variable("beta", [shp], init=tf.constant_initializer(0.))
 
@@ -63,7 +89,7 @@ class custom_conv2d(pt.VarStoreMethod):
     def __call__(self, input_layer, output_dim,
                  k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02, in_dim=None, padding='SAME',
                  name="conv2d"):
-        with tf.variable_scope(name):
+        with tf.variable_scope(tf.get_variable_scope(), reuse=False) as scope:  
             w = self.variable('w', [k_h, k_w, in_dim or input_layer.shape[-1], output_dim],
                               init=tf.truncated_normal_initializer(stddev=stddev))
             conv = tf.nn.conv2d(input_layer.tensor, w, strides=[1, d_h, d_w, 1], padding=padding)
@@ -79,7 +105,7 @@ class custom_deconv2d(pt.VarStoreMethod):
                  k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
                  name="deconv2d"):
         output_shape[0] = input_layer.shape[0]
-        ts_output_shape = tf.pack(output_shape)
+        ts_output_shape = tf.stack(output_shape)
         with tf.variable_scope(name):
             # filter : [height, width, output_channels, in_channels]
             w = self.variable('w', [k_h, k_w, output_shape[-1], input_layer.shape[-1]],
@@ -108,7 +134,7 @@ class custom_fully_connected(pt.VarStoreMethod):
         input_ = input_layer.tensor
         try:
             if len(shape) == 4:
-                input_ = tf.reshape(input_, tf.pack([tf.shape(input_)[0], np.prod(shape[1:])]))
+                input_ = tf.reshape(input_, tf.stack([tf.shape(input_)[0], np.prod(shape[1:])]))
                 input_.set_shape([None, np.prod(shape[1:])])
                 shape = input_.get_shape().as_list()
 

@@ -121,7 +121,7 @@ class InfoGANTrainer(object):
             self.generator_trainer = pt.apply_optimizer(generator_optimizer, losses=[generator_loss], var_list=g_vars)
 
             for k, v in self.log_vars:
-                tf.scalar_summary(k, v)
+                tf.summary.scalar(k, v)
 
         with pt.defaults_scope(phase=pt.Phase.test):
             with tf.variable_scope("model", reuse=True) as scope:
@@ -149,7 +149,7 @@ class InfoGANTrainer(object):
             if isinstance(dist, Gaussian):
                 assert dist.dim == 1, "Only dim=1 is currently supported"
                 c_vals = []
-                for idx in xrange(10):
+                for idx in range(10):
                     c_vals.extend([-1.0 + idx * 2.0 / 9] * 10)
                 c_vals.extend([0.] * (self.batch_size - 100))
                 vary_cat = np.asarray(c_vals, dtype=np.float32).reshape((-1, 1))
@@ -159,7 +159,7 @@ class InfoGANTrainer(object):
             elif isinstance(dist, Categorical):
                 lookup = np.eye(dist.dim, dtype=np.float32)
                 cat_ids = []
-                for idx in xrange(10):
+                for idx in range(10):
                     cat_ids.extend([idx] * 10)
                 cat_ids.extend([0] * (self.batch_size - 100))
                 cur_cat = np.copy(fixed_cat)
@@ -169,7 +169,7 @@ class InfoGANTrainer(object):
                 assert dist.dim == 1, "Only dim=1 is currently supported"
                 lookup = np.eye(dist.dim, dtype=np.float32)
                 cat_ids = []
-                for idx in xrange(10):
+                for idx in range(10):
                     cat_ids.extend([int(idx / 5)] * 10)
                 cat_ids.extend([0] * (self.batch_size - 100))
                 cur_cat = np.copy(fixed_cat)
@@ -195,27 +195,27 @@ class InfoGANTrainer(object):
             img_var = img_var[:rows * rows, :, :, :]
             imgs = tf.reshape(img_var, [rows, rows] + list(self.dataset.image_shape))
             stacked_img = []
-            for row in xrange(rows):
+            for row in range(rows):
                 row_img = []
-                for col in xrange(rows):
+                for col in range(rows):
                     row_img.append(imgs[row, col, :, :, :])
-                stacked_img.append(tf.concat(1, row_img))
-            imgs = tf.concat(0, stacked_img)
+                stacked_img.append(tf.concat(axis=1, values=row_img))
+            imgs = tf.concat(axis=0, values=stacked_img)
             imgs = tf.expand_dims(imgs, 0)
-            tf.image_summary("image_%d_%s" % (dist_idx, dist.__class__.__name__), imgs)
+            tf.summary.image("image_%d_%s" % (dist_idx, dist.__class__.__name__), imgs)
 
 
     def train(self):
 
         self.init_opt()
 
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         with tf.Session() as sess:
             sess.run(init)
 
-            summary_op = tf.merge_all_summaries()
-            summary_writer = tf.train.SummaryWriter(self.log_dir, sess.graph)
+            summary_op = tf.summary.merge_all()
+            summary_writer = tf.summary.FileWriter(self.log_dir, sess.graph)
 
             saver = tf.train.Saver()
 
