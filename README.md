@@ -4,7 +4,7 @@ Code for reproducing key results in the paper [InfoGAN: Interpretable Representa
 
 ## Dependencies
 
-This fork of [the original](https://github.com/openai/InfoGAN) changes part of the code to accomodate the new TensorFlow API.  I am using version 1.3.0.  Since this project also used `prettytensor`, which has it's own problems, you'll need to handle that as well. 
+This fork of [the original](https://github.com/openai/InfoGAN) changes part of the code to accomodate the new TensorFlow API.  I am using version 1.3.0.  Since this project also used `prettytensor`, which has it's own problems, you'll need to make a fix to this library as well (instructions below). 
 
 In addition, please `pip install` the following packages:
 - `prettytensor`
