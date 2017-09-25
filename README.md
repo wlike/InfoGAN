@@ -8,7 +8,7 @@ This fork of [the original](https://github.com/openai/InfoGAN) changes part of t
 
 In addition, please `pip install` the following packages:
 - `prettytensor`
-- `progressbar`
+- `progressbar2`
 - `python-dateutil`
 
 ### Modifying PrettyTensor
